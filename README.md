@@ -69,5 +69,3 @@ Assuming the correct key length was found, it's now time to recover the key itse
         if raw == "":
             samples = load_samples()
 ```
-# Kasiski
-# Kasiski
