@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kasiski</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --surface-2: #f0ede6;
+    --border: rgba(0,0,0,0.10);
+    --border-md: rgba(0,0,0,0.18);
+    --text: #1a1814;
+    --text-2: #6b6760;
+    --text-3: #a09d98;
+    --accent: #2d4a3e;
+    --accent-light: #e8f0ec;
+    --accent-text: #2d4a3e;
+    --warn: #7a4a12;
+    --warn-light: #fdf0e0;
+    --mono: 'Courier New', Courier, monospace;
+  }
+
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border-md);
+    padding-bottom: 1.25rem;
+  }
+
+  header h1 {
+    font-size: 28px;
+    font-weight: normal;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 0.35rem;
+  }
+
+  header p {
+    font-size: 14px;
+    color: var(--text-2);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.01em;
+  }
+
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .step-label {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+
+  .step-title {
+    font-size: 17px;
+    font-weight: normal;
+    color: var(--text);
+    margin-bottom: 1.1rem;
+    letter-spacing: -0.01em;
+  }
+
+  label {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--text-2);
+    display: block;
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+  }
+
+  textarea, input[type=text] {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: 'Courier New', monospace;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+    line-height: 1.55;
+  }
+
+  textarea { min-height: 90px; resize: vertical; }
+
+  textarea:focus, input[type=text]:focus {
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+
+  .err {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #b94040;
+    margin-top: 5px;
+    min-height: 16px;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 0.85rem;
+  }
+
+  .sample-btn {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    padding: 5px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-2);
+    transition: background 0.12s, border-color 0.12s;
+  }
+
+  .sample-btn:hover { background: #e8e4da; border-color: var(--border-md); }
+
+  .sample-label {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  .primary-btn {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    padding: 10px 24px;
+    background: var(--accent);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #f0ede6;
+    letter-spacing: 0.03em;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .primary-btn:hover { opacity: 0.88; }
+  .primary-btn:active { transform: scale(0.98); }
+
+  .result-block {
+    background: var(--surface-2);
+    border-radius: 5px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .result-label {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .result-value {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: var(--text);
+    word-break: break-all;
+    line-height: 1.6;
+  }
+
+  .result-value.big { font-size: 15px; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+  }
+
+  .badge-success { background: var(--accent-light); color: var(--accent-text); }
+  .badge-warn { background: var(--warn-light); color: var(--warn); }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 0.75rem;
+  }
+
+  .stat {
+    background: var(--surface-2);
+    border-radius: 5px;
+    padding: 0.75rem 1rem;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 22px;
+    font-weight: normal;
+    color: var(--text);
+    font-family: 'Courier New', monospace;
+  }
+
+  .stat-lbl {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    color: var(--text-3);
+    margin-top: 3px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  details {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+  }
+
+  summary {
+    padding: 0.7rem 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--text-2);
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    letter-spacing: 0.02em;
+    background: var(--surface-2);
+  }
+
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "▶  "; font-size: 10px; }
+  details[open] summary::before { content: "▼  "; }
+
+  .kasiski-table {
+    width: 100%;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    border-collapse: collapse;
+  }
+
+  .kasiski-table th {
+    text-align: left;
+    padding: 6px 10px;
+    color: var(--text-2);
+    border-bottom: 1px solid var(--border);
+    font-weight: normal;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 10px;
+  }
+
+  .kasiski-table td {
+    padding: 5px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .kasiski-table tr:last-child td { border-bottom: none; }
+
+  .groups-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0.75rem 1rem;
+  }
+
+  .group-row {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--text-2);
+    line-height: 1.5;
+  }
+
+  .group-row span { color: var(--text); }
+
+  .hidden { display: none; }
+
+  #results-section { margin-top: 0.5rem; }
+
+  #download-btn {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    padding: 7px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-2);
+    letter-spacing: 0.02em;
+    margin-top: 0.5rem;
+    transition: background 0.12s;
+  }
+
+  #download-btn:hover { background: var(--surface-2); }
+
+  .run-row {
+    margin-bottom: 1.75rem;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Vigenère Cipher</h1>
+    <p>Encrypt a message, then watch the Kasiski examination crack it.</p>
+  </header>
+
+  <div class="step-card">
+    <div class="step-label">Step 1</div>
+    <div class="step-title">Your message</div>
+    <label for="msg-input">Plaintext message — at least 100 letters</label>
+    <textarea id="msg-input" placeholder="Type your message here…"></textarea>
+    <div class="err" id="msg-err"></div>
+    <div class="btn-row">
+      <span class="sample-label">Samples:</span>
+      <button class="sample-btn" onclick="loadSample(0)">Gettysburg address</button>
+      <button class="sample-btn" onclick="loadSample(1)">Romeo &amp; Juliet</button>
+      <button class="sample-btn" onclick="loadSample(2)">Darwin</button>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-label">Step 2</div>
+    <div class="step-title">Your keyword</div>
+    <label for="key-input">Keyword — letters only, at least 4 characters</label>
+    <input type="text" id="key-input" placeholder="e.g. CIPHER" autocomplete="off" spellcheck="false">
+    <div class="err" id="key-err"></div>
+  </div>
+
+  <div class="run-row">
+    <button class="primary-btn" onclick="runAll()">Encrypt &amp; analyze →</button>
+  </div>
+
+  <div id="results-section" class="hidden">
+
+    <div class="step-card">
+      <div class="step-label">Step 3 — Encryption</div>
+      <div class="step-title">Ciphertext</div>
+      <div class="result-block">
+        <div class="result-label">Ciphertext</div>
+        <div class="result-value big" id="out-cipher"></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat">
+          <div class="stat-num" id="stat-msg-len">—</div>
+          <div class="stat-lbl">plaintext letters</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num" id="stat-key-len">—</div>
+          <div class="stat-lbl">key letters</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num" id="stat-cipher-len">—</div>
+          <div class="stat-lbl">ciphertext letters</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-label">Step 4 — Kasiski examination</div>
+      <div class="step-title">Key length estimation</div>
+      <div class="result-block">
+        <div class="result-label">Estimated key length</div>
+        <div class="result-value big" id="out-est-len"></div>
+      </div>
+      <details id="kasiski-details">
+        <summary>Show Kasiski repeated-sequence table</summary>
+        <div style="overflow-x:auto;padding:.75rem 0">
+          <table class="kasiski-table" id="kasiski-tbl">
+            <thead>
+              <tr>
+                <th>Sequence</th>
+                <th>Pos 1</th>
+                <th>Pos 2</th>
+                <th>Distance</th>
+                <th>Factors in range</th>
+              </tr>
+            </thead>
+            <tbody id="kasiski-body"></tbody>
+          </table>
+          <div id="kasiski-none" class="hidden" style="font-family:'Courier New',monospace;font-size:12px;color:var(--text-3);padding:.5rem 1rem">No repeated trigrams found.</div>
+        </div>
+      </details>
+      <details id="groups-details">
+        <summary>Show ciphertext groups</summary>
+        <div class="groups-grid" id="groups-out"></div>
+      </details>
+    </div>
+
+    <div class="step-card">
+      <div class="step-label">Step 5 — Frequency analysis</div>
+      <div class="step-title">Key recovery &amp; decryption</div>
+      <div class="two-col" style="margin-bottom:.75rem">
+        <div class="result-block" style="margin-bottom:0">
+          <div class="result-label">Recovered key</div>
+          <div class="result-value big" id="out-rec-key"></div>
+        </div>
+        <div class="result-block" style="margin-bottom:0">
+          <div class="result-label">Actual key</div>
+          <div class="result-value big" id="out-act-key"></div>
+        </div>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Decrypted message</div>
+        <div class="result-value" id="out-decrypted"></div>
+      </div>
+      <div id="out-verdict" style="margin-top:.75rem;font-size:14px"></div>
+    </div>
+
+    <button id="download-btn" onclick="downloadReport()">↓ Download session report (.txt)</button>
+  </div>
+</div>
+
+<script>
+const SAMPLES = [
+  "Four score and seven years ago our fathers brought forth on this continent a new nation conceived in Liberty and dedicated to the proposition that all men are created equal. Now we are engaged in a great civil war testing whether that nation or any nation so conceived and so dedicated can long endure.",
+  "But soft what light through yonder window breaks it is the east and Juliet is the sun arise fair sun and kill the envious moon who is already sick and pale with grief that thou her maid art far more fair than she be not her maid since she is envious her vestal livery is but sick and green and none but fools do wear it cast it off.",
+  "It is not the strongest of the species that survives nor the most intelligent that survives. It is the one that is most adaptable to change. In the struggle for survival the fittest win out at the expense of their rivals because they succeed in adapting themselves best to their environment."
+];
+
+const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const EF = [0.08167,0.01492,0.02782,0.04253,0.12702,0.02228,0.02015,0.06094,0.06966,0.00153,0.00772,0.04025,0.02406,0.06749,0.07507,0.01929,0.00095,0.05987,0.06327,0.09056,0.02758,0.00978,0.02360,0.00150,0.01974,0.00074];
+
+let sessionData = {};
+
+function clean(s){ return s.replace(/[^A-Za-z]/g,'').toUpperCase(); }
+
+function loadSample(i){
+  document.getElementById('msg-input').value = SAMPLES[i];
+  document.getElementById('msg-err').textContent = '';
+}
+
+function encrypt(msg, key){
+  return [...msg].map((c,i) => alpha[(alpha.indexOf(c)+alpha.indexOf(key[i%key.length]))%26]).join('');
+}
+
+function decrypt(ct, key){
+  return [...ct].map((c,i) => alpha[((alpha.indexOf(c)-alpha.indexOf(key[i%key.length]))+26)%26]).join('');
+}
+
+function getFactors(n, minF, maxF){
+  const f=[];
+  for(let i=minF; i<=Math.min(maxF,n-1); i++) if(n%i===0) f.push(i);
+  return f;
+}
+
+function findRepeats(ct){
+  const pos={};
+  for(let i=0;i<ct.length-2;i++){
+    const s=ct.slice(i,i+3);
+    (pos[s]=pos[s]||[]).push(i);
+  }
+  return Object.fromEntries(Object.entries(pos).filter(([,v])=>v.length>1));
+}
+
+function estimateKeyLength(ct){
+  const repeated=findRepeats(ct);
+  const counts={};
+  const minF=4, maxF=Math.max(4,Math.min(30,Math.floor(ct.length/2)));
+  for(const positions of Object.values(repeated)){
+    for(let i=0;i<positions.length-1;i++){
+      const d=positions[i+1]-positions[i];
+      getFactors(d,minF,maxF).forEach(f=>{ counts[f]=(counts[f]||0)+1; });
+    }
+  }
+  if(!Object.keys(counts).length) return 1;
+  return +Object.entries(counts).sort((a,b)=>b[1]-a[1])[0][0];
+}
+
+function buildKasiskiRows(ct){
+  const repeated=findRepeats(ct);
+  const minF=4, maxF=Math.max(4,Math.min(30,Math.floor(ct.length/2)));
+  const rows=[];
+  for(const [seq,positions] of Object.entries(repeated).sort()){
+    for(let i=0;i<positions.length-1;i++){
+      const p1=positions[i], p2=positions[i+1], d=p2-p1;
+      const fs=getFactors(d,minF,maxF);
+      rows.push({seq,p1,p2,d,factors:fs.length?fs.join(', '):'—'});
+    }
+  }
+  return rows;
+}
+
+function splitGroups(ct, kl){
+  const g=Array.from({length:kl},()=>'');
+  [...ct].forEach((c,i)=>g[i%kl]+=c);
+  return g;
+}
+
+function chiScore(counts, total, shift){
+  let s=0;
+  for(let i=0;i<26;i++){
+    const exp=EF[i]*total;
+    const obs=counts[alpha[(i+shift)%26]]||0;
+    if(exp>0) s+=(obs-exp)**2/exp;
+  }
+  return s;
+}
+
+function recoverKeyLetter(group){
+  const counts={};
+  [...group].forEach(c=>counts[c]=(counts[c]||0)+1);
+  let best=0, bestScore=Infinity;
+  for(let s=0;s<26;s++){
+    const sc=chiScore(counts,group.length,s);
+    if(sc<bestScore){bestScore=sc;best=s;}
+  }
+  return alpha[best];
+}
+
+function recoverKey(ct, kl){
+  return splitGroups(ct,kl).map(recoverKeyLetter).join('');
+}
+
+function runAll(){
+  const rawMsg=document.getElementById('msg-input').value.trim();
+  const rawKey=document.getElementById('key-input').value.trim().toUpperCase();
+  let ok=true;
+
+  const msg=clean(rawMsg);
+  if(msg.length<100){
+    document.getElementById('msg-err').textContent=`Message needs at least 100 letters — currently ${msg.length}.`;
+    ok=false;
+  } else { document.getElementById('msg-err').textContent=''; }
+
+  if(!rawKey.match(/^[A-Za-z]{4,}$/)){
+    document.getElementById('key-err').textContent=rawKey.length>0&&rawKey.length<4
+      ?`Keyword too short — ${rawKey.length} letter(s), need at least 4.`
+      :'Keyword must contain only letters (at least 4).';
+    ok=false;
+  } else { document.getElementById('key-err').textContent=''; }
+
+  if(!ok) return;
+
+  const key=rawKey.replace(/[^A-Za-z]/g,'').toUpperCase();
+  const ct=encrypt(msg,key);
+  const estLen=estimateKeyLength(ct);
+  const groups=splitGroups(ct,estLen);
+  const recKey=recoverKey(ct,estLen);
+  const decrypted=decrypt(ct,recKey);
+
+  document.getElementById('out-cipher').textContent=ct;
+  document.getElementById('stat-msg-len').textContent=msg.length;
+  document.getElementById('stat-key-len').textContent=key.length;
+  document.getElementById('stat-cipher-len').textContent=ct.length;
+
+  const estEl=document.getElementById('out-est-len');
+  if(estLen===key.length){
+    estEl.innerHTML=`${estLen} <span class="badge badge-success">matches actual</span>`;
+  } else {
+    estEl.innerHTML=`${estLen} <span class="badge badge-warn">actual: ${key.length}</span>`;
+  }
+
+  const kasRows=buildKasiskiRows(ct);
+  const tbody=document.getElementById('kasiski-body');
+  tbody.innerHTML='';
+  if(kasRows.length){
+    document.getElementById('kasiski-none').classList.add('hidden');
+    kasRows.forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${r.seq}</td><td>${r.p1}</td><td>${r.p2}</td><td>${r.d}</td><td>${r.factors}</td>`;
+      tbody.appendChild(tr);
+    });
+  } else {
+    document.getElementById('kasiski-none').classList.remove('hidden');
+  }
+
+  const gout=document.getElementById('groups-out');
+  gout.innerHTML='';
+  groups.forEach((g,i)=>{
+    const d=document.createElement('div');
+    d.className='group-row';
+    d.innerHTML=`Group ${i+1} <span>(key pos ${i+1})</span>: ${g}`;
+    gout.appendChild(d);
+  });
+
+  document.getElementById('out-rec-key').textContent=recKey;
+  document.getElementById('out-act-key').textContent=key;
+  document.getElementById('out-decrypted').textContent=decrypted;
+
+  const verdictEl=document.getElementById('out-verdict');
+  if(decrypted===msg){
+    verdictEl.innerHTML='<span class="badge badge-success">Full success — decrypted message matches the original.</span>';
+  } else {
+    const matches=[...decrypted].filter((c,i)=>c===msg[i]).length;
+    const pct=(100*matches/msg.length).toFixed(1);
+    verdictEl.innerHTML=`<span class="badge badge-warn">Partial match — ${matches} of ${msg.length} characters correct (${pct}%).</span>`;
+  }
+
+  sessionData={msg,key,ct,estLen,groups,recKey,decrypted,kasRows};
+  document.getElementById('results-section').classList.remove('hidden');
+  document.getElementById('results-section').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function downloadReport(){
+  const {msg,key,ct,estLen,groups,recKey,decrypted,kasRows}=sessionData;
+  const lines=[];
+  const sec=t=>{lines.push(`--- ${t} ---`,'');};
+  sec('Plaintext message');
+  lines.push(`Length : ${msg.length} letters`,`Message: ${msg}`,'');
+  sec('Encryption key');
+  lines.push(`Length : ${key.length} letters`,`Key    : ${key}`,'');
+  sec('Ciphertext');
+  lines.push(`Length    : ${ct.length} letters`,`Ciphertext: ${ct}`,'');
+  sec(`Kasiski repeated-sequence table (${kasRows.length} pair(s))`);
+  if(kasRows.length){
+    lines.push('Sequence  Pos1  Pos2  Distance  Factors');
+    kasRows.forEach(r=>lines.push(`${r.seq}         ${r.p1}    ${r.p2}    ${r.d}       ${r.factors}`));
+  } else { lines.push('(no repeated sequences found)'); }
+  lines.push('');
+  sec(`Ciphertext split into ${estLen} group(s)`);
+  groups.forEach((g,i)=>lines.push(`  Group ${i+1} (key position ${i+1}): ${g}`));
+  lines.push('');
+  sec('Key recovery');
+  lines.push(`Estimated key length: ${estLen}  (actual: ${key.length})`,`Recovered key       : ${recKey}  (actual: ${key})`,'');
+  sec('Decrypted message');
+  lines.push(`Length   : ${decrypted.length} letters`,`Decrypted: ${decrypted}`,'');
+  if(decrypted===msg){
+    lines.push('Result: Success — decrypted message matches the original.');
+  } else {
+    const m=[...decrypted].filter((c,i)=>c===msg[i]).length;
+    lines.push(`Result: Partial match — ${m} of ${msg.length} correct (${(100*m/msg.length).toFixed(1)}%).`);
+  }
+  const blob=new Blob([lines.join('\n')+'\n'],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='session_output.txt';
+  a.click();
+}
+</script>
+</body>
+</html>
