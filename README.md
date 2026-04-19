@@ -31,7 +31,7 @@ Now, `main.py` calls the `encrypt()` function, which is located at the top of th
 5. Then, the function `appends` the corresponding letter to the `encrypted` list value. After that, `key_index` increments.
 6. Once the `for` loop has iterated through the entire message, the newly enciphered text is returned to the `ciphertext` variable, which is printed to the screen.
 
-Now it's time to start breaking the code. The method for doing so begins with seeking the length of the key used to encipher the message. This method is attributed to [Friedrich Wilhelm Kasiski](https://en.wikipedia.org/wiki/Friedrich_Kasiski), a retired Prussian army officer who published it in 1861.
+Now it's time to start breaking the code. The method for doing so begins with seeking the length of the key used to encipher the message. This method is attributed to [Friedrich Wilhelm Kasiski](https://en.wikipedia.org/wiki/Friedrich_Kasiski), a retired Prussian army officer who published it in 1863.
 
 - The first step in the Kasiski method is to look for sets of repeating characters within the ciphertext. (To minimize noise in the results, the repeating sets must be at least 3 letters long.)
 - The next step is to count the number of letters separating the repeated letters. (For example, in 'UOAKT***AKL***UDDKT***AKL***UII', the distance between the two `AKL`s would be counted as 8.)
