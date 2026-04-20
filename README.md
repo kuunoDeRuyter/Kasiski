@@ -1,6 +1,6 @@
 # Kasiski
 #### Video Demo:  [link to video demo](https://youtu.be/k21AIioce4U)
-#### Try a [web-based version](https://kuunoDeRuyter.github.io/Kasiski/) live (converted from Python by Claude)
+#### Try a [web-based version](https://kuunoDeRuyter.github.io/Kasiski/) live (converted from Python by Claude AI)
 #### Description:
 
 In a way, this project seeks to pick up where [CS50 problem set 2](https://cs50.harvard.edu/x/psets/2/) left off. More specifically, it is meant to offer the user a way to explore how variations in key and message length can affect the likelihood of cryptanalyzing a message encrypted using a Vigenère square, also known as a _tabula recta_. (Spoiler: ***Short messages are harder to crack*** because you have less data to analyze. Moreover, ***long encryption keys also make decryption more difficult*** because decryption methods rely heavily on detecting repetitions in the encrypted message. The longer a key is, the less often it repeats.)
